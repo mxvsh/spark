@@ -1,101 +1,156 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import React, { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+import {
+  Input,
+  Button,
+  Select,
+  SelectItem,
+  Card,
+  CardFooter,
+  CardHeader,
+  CardBody,
+  Chip,
+  Slider,
+} from '@nextui-org/react';
+import { quizTopics } from '../constants';
+
+function getTopics(count: number) {
+  const topics = new Set<string>();
+
+  while (topics.size < count) {
+    const index = Math.floor(Math.random() * quizTopics.length);
+    topics.add(quizTopics[index]);
+  }
+
+  return Array.from(topics);
 }
+
+const Page = () => {
+  const [suggestedTopics, setSuggestedTopics] = useState<string[]>([]);
+
+  const [topic, setTopic] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+  const [numQuestions, setNumQuestions] = useState(5);
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setSuggestedTopics(getTopics(4));
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    fetch('/api/quiz', {
+      method: 'POST',
+      body: JSON.stringify({
+        topic,
+        difficulty,
+        numQuestions,
+      }),
+    }).then(response => {
+      setLoading(false);
+      if (response.ok) {
+        response.text().then(id => {
+          window.location.href = `/quiz/${id}`;
+        });
+      }
+    });
+  };
+
+  return (
+    <AnimatePresence>
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <motion.form onSubmit={handleSubmit}>
+          <Card className="xl:w-[30rem] p-4">
+            <CardHeader>
+              <div className="flex flex-col">
+                <p className="text-lg font-medium">Get started</p>
+                <p className="text-small text-default-500">
+                  Create a quiz to test your knowledge
+                </p>
+              </div>
+            </CardHeader>
+
+            <CardBody className="space-y-4">
+              <div>
+                <Input
+                  id="topic"
+                  type="text"
+                  value={topic}
+                  onChange={e => setTopic(e.target.value)}
+                  placeholder="Enter quiz topic"
+                  required
+                  label="Topic"
+                />
+
+                <div className="mt-2 flex gap-2 overflow-auto">
+                  {suggestedTopics.map((suggestedTopic, index) => (
+                    <Chip
+                      key={index}
+                      variant="flat"
+                      className="cursor-pointer"
+                      size="sm"
+                      onClick={() => {
+                        setTopic(suggestedTopic);
+                      }}
+                    >
+                      {suggestedTopic}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Select
+                  label="Select difficulty"
+                  onChange={e => {
+                    setDifficulty(e.target.value);
+                  }}
+                >
+                  <SelectItem key={0} value="easy">
+                    Easy
+                  </SelectItem>
+                  <SelectItem key={1} value="medium">
+                    Medium
+                  </SelectItem>
+                  <SelectItem key={2} value="hard">
+                    Hard
+                  </SelectItem>
+                </Select>
+              </div>
+              <div>
+                <Slider
+                  label="Number of questions"
+                  step={1}
+                  maxValue={15}
+                  minValue={2}
+                  value={numQuestions}
+                  className="max-w-md"
+                  onChange={value => {
+                    setNumQuestions(value as number);
+                  }}
+                />
+              </div>
+            </CardBody>
+
+            <CardFooter className="flex-col gap-2">
+              <Button
+                type="submit"
+                className="w-full"
+                color="primary"
+                isLoading={loading}
+              >
+                Submit
+              </Button>
+            </CardFooter>
+          </Card>
+        </motion.form>
+      </div>
+    </AnimatePresence>
+  );
+};
+
+export default Page;
