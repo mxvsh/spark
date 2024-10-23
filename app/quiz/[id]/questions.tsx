@@ -207,7 +207,7 @@ function Questions({ id, questions }: Props) {
         </CardBody>
         <CardFooter>
           <p className="text-default-500 text-xs">
-            Select answer carefully, you can't undo it.
+            Select answer carefully, you can&apos;t undo it.
           </p>
         </CardFooter>
       </Card>
