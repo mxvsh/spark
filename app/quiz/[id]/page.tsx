@@ -4,7 +4,7 @@ import { Question } from '../../api/quiz/route';
 import Questions from './questions';
 import { redirect } from 'next/navigation';
 
-export default async function ({
+async function QuizPage({
   params,
 }: {
   params: {
@@ -20,3 +20,5 @@ export default async function ({
 
   return <Questions questions={questions} id={params.id} />;
 }
+
+export default QuizPage;
